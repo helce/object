@@ -245,6 +245,7 @@ fn elf_any() {
         (Architecture::Riscv64, Endianness::Little),
         (Architecture::S390x, Endianness::Big),
         (Architecture::Sparc64, Endianness::Big),
+        (Architecture::E2k64, Endianness::Little),
     ]
     .iter()
     .copied()

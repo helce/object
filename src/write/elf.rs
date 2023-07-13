@@ -88,6 +88,7 @@ impl Object {
             Architecture::Riscv32 => true,
             Architecture::S390x => true,
             Architecture::Sparc64 => true,
+            Architecture::E2k64 => true,
             _ => {
                 return Err(Error(format!(
                     "unimplemented architecture {:?}",
@@ -371,6 +372,7 @@ impl Object {
             Architecture::Riscv64 => elf::EM_RISCV,
             Architecture::S390x => elf::EM_S390,
             Architecture::Sparc64 => elf::EM_SPARCV9,
+            Architecture::E2k64 => elf::EM_MCST_ELBRUS,
             _ => {
                 return Err(Error(format!(
                     "unimplemented architecture {:?}",
@@ -806,6 +808,14 @@ impl Object {
                             _ => {
                                 return Err(Error(format!("unimplemented relocation {:?}", reloc)));
                             }
+                        },
+                        Architecture::E2k64 => match (reloc.kind, reloc.encoding, reloc.size) {
+                            // TODO NIY
+                            (RelocationKind::Elf(x), _, _) => x,
+                            _ => {
+                                return Err(Error(format!("unimplemented relocation {:?}", reloc)));
+                            }
+
                         },
                         _ => {
                             if let RelocationKind::Elf(x) = reloc.kind {

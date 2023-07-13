@@ -6217,6 +6217,116 @@ pub const R_NDS32_TLS_TPOFF: u32 = 102;
 #[allow(missing_docs)]
 pub const R_NDS32_TLS_DESC: u32 = 119;
 
+// E2K values `FileHeader*::e_flags`.
+#[allow(missing_docs)]
+pub const EF_E2K_IPD: u32 =  3;
+#[allow(missing_docs)]
+pub const EF_E2K_X86APP: u32 = 4;
+#[allow(missing_docs)]
+pub const EF_E2K_4MB_PAGES: u32 = 8;
+#[allow(missing_docs)]
+pub const EF_E2K_INCOMPAT: u32 = 16;
+#[allow(missing_docs)]
+pub const EF_E2K_PM: u32 = 32;
+#[allow(missing_docs)]
+pub const EF_E2K_BUG_75842: u32 = 64;
+#[allow(missing_docs)]
+pub const EF_E2K_PACK_SEGMENTS: u32 = 64;
+#[allow(missing_docs)]
+pub const EF_E2K_MACH_EV2: u32 = 0x2000000;
+#[allow(missing_docs)]
+pub const EF_E2K_MACH_EV3: u32 = 0x3000000;
+#[allow(missing_docs)]
+pub const EF_E2K_MACH_EV4: u32 = 0x4000000;
+#[allow(missing_docs)]
+pub const EF_E2K_MACH_EV5: u32 = 0x5000000;
+#[allow(missing_docs)]
+pub const EF_E2K_MACH_EV6: u32 = 0x6000000;
+#[allow(missing_docs)]
+pub const EF_E2K_MACH_EV7: u32 = 0x7000000;
+#[allow(missing_docs)]
+pub const EF_E2K_MACH_8C: u32 = 0x13000000;
+#[allow(missing_docs)]
+pub const EF_E2K_MACH_1CPLUS: u32 = 0x14000000;
+#[allow(missing_docs)]
+pub const EF_E2K_MACH_12C: u32 = 0x15000000;
+#[allow(missing_docs)]
+pub const EF_E2K_MACH_16C: u32 = 0x16000000;
+#[allow(missing_docs)]
+pub const EF_E2K_MACH_2C3: u32 = 0x17000000;
+
+// E2K values `Rel*::r_type`.
+#[allow(missing_docs)]
+pub const R_E2K_32_ABS: u32 = 0;
+#[allow(missing_docs)]
+pub const R_E2K_32_PC: u32 = 2;
+#[allow(missing_docs)]
+pub const R_E2K_32_JMP_SLOT: u32 = 8;
+#[allow(missing_docs)]
+pub const R_E2K_32_COPY: u32 = 9;
+#[allow(missing_docs)]
+pub const R_E2K_32_RELATIVE: u32 = 10;
+#[allow(missing_docs)]
+pub const R_E2K_32_IRELATIVE: u32 = 11;
+#[allow(missing_docs)]
+pub const R_E2K_32_SIZE: u32 = 12;
+#[allow(missing_docs)]
+pub const R_E2K_64_ABS: u32 = 50;
+#[allow(missing_docs)]
+pub const R_E2K_64_ABS_LIT: u32 = 51;
+#[allow(missing_docs)]
+pub const R_E2K_64_PC_LIT: u32 = 54;
+#[allow(missing_docs)]
+pub const R_E2K_64_JMP_SLOT: u32 = 63;
+#[allow(missing_docs)]
+pub const R_E2K_64_COPY: u32 = 64;
+#[allow(missing_docs)]
+pub const R_E2K_64_RELATIVE: u32 = 65;
+#[allow(missing_docs)]
+pub const R_E2K_64_RELATIVE_LIT: u32 = 66;
+#[allow(missing_docs)]
+pub const R_E2K_64_IRELATIVE: u32 = 67;
+#[allow(missing_docs)]
+pub const R_E2K_64_SIZE: u32 = 68;
+#[allow(missing_docs)]
+pub const R_E2K_64_GOTOFF: u32 = 69;
+#[allow(missing_docs)]
+pub const R_E2K_TLS_GDMOD: u32 = 70;
+#[allow(missing_docs)]
+pub const R_E2K_TLS_GDREL: u32 = 71;
+#[allow(missing_docs)]
+pub const R_E2K_TLS_IE: u32 = 74;
+#[allow(missing_docs)]
+pub const R_E2K_32_TLS_LE: u32 = 75;
+#[allow(missing_docs)]
+pub const R_E2K_64_TLS_LE: u32 = 76;
+#[allow(missing_docs)]
+pub const R_E2K_TLS_32_DTPMOD: u32 = 80;
+#[allow(missing_docs)]
+pub const R_E2K_TLS_32_DTPREL: u32 = 81;
+#[allow(missing_docs)]
+pub const R_E2K_TLS_64_DTPMOD: u32 = 82;
+#[allow(missing_docs)]
+pub const R_E2K_TLS_64_DTPREL: u32 = 83;
+#[allow(missing_docs)]
+pub const R_E2K_TLS_32_TPREL: u32 = 84;
+#[allow(missing_docs)]
+pub const R_E2K_TLS_64_TPREL: u32 = 85;
+#[allow(missing_docs)]
+pub const R_E2K_AP: u32 = 100;
+#[allow(missing_docs)]
+pub const R_E2K_PL: u32 = 101;
+#[allow(missing_docs)]
+pub const R_E2K_GOT: u32 = 108;
+#[allow(missing_docs)]
+pub const R_E2K_GOTOFF: u32 = 109;
+#[allow(missing_docs)]
+pub const R_E2K_DISP: u32 = 110;
+#[allow(missing_docs)]
+pub const R_E2K_PREF: u32 = 111;
+#[allow(missing_docs)]
+pub const R_E2K_NONE: u32 = 112;
+
 unsafe_impl_endian_pod!(
     FileHeader32,
     FileHeader64,

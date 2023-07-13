@@ -373,6 +373,10 @@ fn parse_relocation<Elf: FileHeader>(
                 elf::R_SPARC_64 | elf::R_SPARC_UA64 => (RelocationKind::Absolute, 64),
                 r_type => (RelocationKind::Elf(r_type), 0),
             }
+        },
+        elf::EM_MCST_ELBRUS => match reloc.r_type(endian, false) {
+            // TODO NIY
+            r_type => (RelocationKind::Elf(r_type), 0),
         }
         _ => (RelocationKind::Elf(reloc.r_type(endian, false)), 0),
     };

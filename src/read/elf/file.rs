@@ -172,6 +172,7 @@ where
             // We only support the 64-bit variant s390x here.
             (elf::EM_S390, true) => Architecture::S390x,
             (elf::EM_SPARCV9, true) => Architecture::Sparc64,
+            (elf::EM_MCST_ELBRUS, _) => Architecture::E2k64,
             _ => Architecture::Unknown,
         }
     }
