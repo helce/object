@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::{env, fs, process};
 
 use object::{
-    write, Object, ObjectComdat, ObjectSection, ObjectSymbol, RelocationTarget, SectionKind,
-    SymbolFlags, SymbolKind, SymbolSection,
+    write, Object, ObjectComdat, ObjectKind, ObjectSection, ObjectSymbol, RelocationTarget,
+    SectionKind, SymbolFlags, SymbolKind, SymbolSection,
 };
 
 fn main() {
@@ -38,6 +38,10 @@ fn main() {
             process::exit(1);
         }
     };
+    if in_object.kind() != ObjectKind::Relocatable {
+        eprintln!("Unsupported object kind: {:?}", in_object.kind());
+        process::exit(1);
+    }
 
     let mut out_object = write::Object::new(
         in_object.format(),
@@ -66,7 +70,7 @@ fn main() {
         if out_section.is_bss() {
             out_section.append_bss(in_section.size(), in_section.align());
         } else {
-            out_section.set_data(in_section.data().unwrap().into(), in_section.align());
+            out_section.set_data(in_section.data().unwrap(), in_section.align());
         }
         out_section.flags = in_section.flags();
         out_sections.insert(in_section.index(), section_id);
