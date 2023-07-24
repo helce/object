@@ -6335,6 +6335,26 @@ pub const R_E2K_PREF: u32 = 111;
 #[allow(missing_docs)]
 pub const R_E2K_NONE: u32 = 112;
 
+// E2k specific values for `Dyn*::d_tag`.
+#[allow(missing_docs)]
+pub const DT_E2K_LAZY_DEFECTIVE: u32 = DT_LOPROC + 0;
+#[allow(missing_docs)]
+pub const DT_E2K_LAZY: u32 = DT_LOPROC + 1;
+#[allow(missing_docs)]
+pub const DT_E2K_LAZY_BUG_75842: u32 = DT_LOPROC + 2;
+#[allow(missing_docs)]
+pub const DT_E2K_LAZY_GOT: u32 = DT_LOPROC + 3;
+#[allow(missing_docs)]
+pub const DT_E2K_INIT_GOT: u32 = DT_LOPROC + 0x101c;
+#[allow(missing_docs)]
+pub const DT_E2K_EXPORT_PL: u32 = DT_LOPROC + 0x101d;
+#[allow(missing_docs)]
+pub const DT_E2K_EXPORT_PLSZ: u32 = DT_LOPROC + 0x101e;
+#[allow(missing_docs)]
+pub const DT_E2K_REAL_PLTGOT: u32 = DT_LOPROC + 0x101f;
+#[allow(missing_docs)]
+pub const DT_E2K_NUM: u32 = 0x1020;
+
 unsafe_impl_endian_pod!(
     FileHeader32,
     FileHeader64,
