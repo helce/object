@@ -15687,3 +15687,45 @@ ImageBaseRelocation {
     Type: IMAGE_REL_BASED_DIR64 (0xA)
     Addend: 0x140001690
 }
+ImageResourceDirectory {
+    Characteristics: 0
+    TimeDateStamp: 0
+    MajorVersion: 0
+    MinorVersion: 0
+    NumberOfNamedEntries: 0
+    NumberOfIdEntries: 1
+    ImageResourceDirectoryEntry {
+        NameOrId: RT_MANIFEST (0x18)
+        OffsetToDataOrDirectory: 0x80000018
+        ImageResourceDirectory {
+            Characteristics: 0
+            TimeDateStamp: 0
+            MajorVersion: 0
+            MinorVersion: 0
+            NumberOfNamedEntries: 0
+            NumberOfIdEntries: 1
+            ImageResourceDirectoryEntry {
+                NameOrId: 1
+                OffsetToDataOrDirectory: 0x80000030
+                ImageResourceDirectory {
+                    Characteristics: 0
+                    TimeDateStamp: 0
+                    MajorVersion: 0
+                    MinorVersion: 0
+                    NumberOfNamedEntries: 0
+                    NumberOfIdEntries: 1
+                    ImageResourceDirectoryEntry {
+                        NameOrId: 0
+                        OffsetToDataOrDirectory: 0x48
+                        ImageResourceDataEntry {
+                            VirtualAddress: 0x10058
+                            Size: 1167
+                            CodePage: 0
+                            Reserved: 0x0
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

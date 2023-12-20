@@ -1,11 +1,11 @@
 [package]
 name = "object"
 # Note: disable resolver in workspace setting before releases.
-version = "0.28.3"
+version = "0.28.4"
 edition = "2018"
 exclude = ["/.github", "/testfiles"]
 keywords = ["object", "elf", "mach-o", "pe", "coff"]
-license = "Apache-2.0/MIT"
+license = "Apache-2.0 OR MIT"
 repository = "https://github.com/gimli-rs/object"
 description = "A unified interface for reading and writing object file formats."
 

@@ -92,6 +92,7 @@ fn print_pe<Pe: ImageNtHeaders>(p: &mut Printer<'_>, data: &[u8]) {
                 print_export_dir(p, data, &sections, &data_directories);
                 print_import_dir::<Pe>(p, data, &sections, &data_directories);
                 print_reloc_dir(p, data, machine, &sections, &data_directories);
+                print_resource_dir(p, data, &sections, &data_directories);
             }
         }
     }
@@ -306,6 +307,83 @@ fn print_import_dir<Pe: ImageNtHeaders>(
         }
     });
     Some(())
+}
+
+fn print_resource_dir(
+    p: &mut Printer<'_>,
+    data: &[u8],
+    sections: &SectionTable,
+    data_directories: &DataDirectories,
+) -> Option<()> {
+    let directory = data_directories
+        .resource_directory(data, sections)
+        .print_err(p)??;
+    let root = directory.root().print_err(p)?;
+    print_resource_table(p, directory, root, 0);
+    Some(())
+}
+
+fn print_resource_table(
+    p: &mut Printer<'_>,
+    directory: ResourceDirectory<'_>,
+    table: ResourceDirectoryTable<'_>,
+    level: usize,
+) {
+    p.group("ImageResourceDirectory", |p| {
+        p.field("Characteristics", table.header.characteristics.get(LE));
+        p.field("TimeDateStamp", table.header.time_date_stamp.get(LE));
+        p.field("MajorVersion", table.header.major_version.get(LE));
+        p.field("MinorVersion", table.header.minor_version.get(LE));
+        p.field(
+            "NumberOfNamedEntries",
+            table.header.number_of_named_entries.get(LE),
+        );
+        p.field(
+            "NumberOfIdEntries",
+            table.header.number_of_id_entries.get(LE),
+        );
+        for entry in table.entries {
+            p.group("ImageResourceDirectoryEntry", |p| {
+                match entry.name_or_id() {
+                    ResourceNameOrId::Name(name) => {
+                        let offset = entry.name_or_id.get(LE);
+                        if let Some(name) = name.to_string_lossy(directory).print_err(p) {
+                            p.field_name("NameOrId");
+                            writeln!(p.w, "\"{}\" (0x{:X})", name, offset).unwrap();
+                        } else {
+                            p.field_hex("NameOrId", offset);
+                        }
+                    }
+                    ResourceNameOrId::Id(id) => {
+                        if level == 0 {
+                            p.field_enum("NameOrId", id, FLAGS_RT);
+                        } else {
+                            p.field("NameOrId", id);
+                        }
+                    }
+                }
+                p.field_hex(
+                    "OffsetToDataOrDirectory",
+                    entry.offset_to_data_or_directory.get(LE),
+                );
+
+                match entry.data(directory).print_err(p) {
+                    Some(ResourceDirectoryEntryData::Table(table)) => {
+                        print_resource_table(p, directory, table, level + 1)
+                    }
+                    Some(ResourceDirectoryEntryData::Data(data_entry)) => {
+                        p.group("ImageResourceDataEntry", |p| {
+                            p.field_hex("VirtualAddress", data_entry.offset_to_data.get(LE));
+                            p.field("Size", data_entry.size.get(LE));
+                            p.field("CodePage", data_entry.code_page.get(LE));
+                            p.field_hex("Reserved", data_entry.reserved.get(LE));
+                        });
+                    }
+                    None => {}
+                }
+            });
+        }
+    })
 }
 
 fn print_sections(
@@ -1021,4 +1099,27 @@ static FLAGS_IMAGE_REL_RISCV_BASED: &[Flag<u16>] = &flags!(
     IMAGE_REL_BASED_RISCV_HIGH20,
     IMAGE_REL_BASED_RISCV_LOW12I,
     IMAGE_REL_BASED_RISCV_LOW12S,
+);
+static FLAGS_RT: &[Flag<u16>] = &flags!(
+    RT_CURSOR,
+    RT_BITMAP,
+    RT_ICON,
+    RT_MENU,
+    RT_DIALOG,
+    RT_STRING,
+    RT_FONTDIR,
+    RT_FONT,
+    RT_ACCELERATOR,
+    RT_RCDATA,
+    RT_MESSAGETABLE,
+    RT_GROUP_CURSOR,
+    RT_GROUP_ICON,
+    RT_VERSION,
+    RT_DLGINCLUDE,
+    RT_PLUGPLAY,
+    RT_VXD,
+    RT_ANICURSOR,
+    RT_ANIICON,
+    RT_HTML,
+    RT_MANIFEST,
 );
