@@ -6,6 +6,15 @@ use object::{
     SectionKind, SymbolFlags, SymbolKind, SymbolSection,
 };
 
+/// An example of how to use the read and write APIs of the `object` crate
+/// for relocatable object files.
+///
+/// It is not recommended to use this approach for copying object files, as it
+/// does not reliably copy all information from the input file. Instead, use the
+/// builder APIs.
+///
+/// This function is also used for testing the `object` crate on inputs that
+/// are known to be supported.
 pub fn copy(in_data: &[u8]) -> Vec<u8> {
     let in_object = match object::File::parse(in_data) {
         Ok(object) => object,
@@ -137,11 +146,9 @@ pub fn copy(in_data: &[u8]) -> Vec<u8> {
             };
             let out_relocation = write::Relocation {
                 offset,
-                size: in_relocation.size(),
-                kind: in_relocation.kind(),
-                encoding: in_relocation.encoding(),
                 symbol,
                 addend: in_relocation.addend(),
+                flags: in_relocation.flags(),
             };
             out_object
                 .add_relocation(out_section, out_relocation)
