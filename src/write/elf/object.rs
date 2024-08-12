@@ -127,6 +127,7 @@ impl<'a> Object<'a> {
             Architecture::Avr => true,
             Architecture::Bpf => false,
             Architecture::Csky => true,
+            Architecture::E2k => true,
             Architecture::I386 => false,
             Architecture::X86_64 => true,
             Architecture::X86_64_X32 => true,
@@ -331,6 +332,7 @@ impl<'a> Object<'a> {
             Architecture::Avr => elf::EM_AVR,
             Architecture::Bpf => elf::EM_BPF,
             Architecture::Csky => elf::EM_CSKY,
+            Architecture::E2k => elf::EM_MCST_ELBRUS,
             Architecture::I386 => elf::EM_386,
             Architecture::X86_64 => elf::EM_X86_64,
             Architecture::X86_64_X32 => elf::EM_X86_64,
@@ -555,6 +557,14 @@ impl<'a> Object<'a> {
                             (RelocationKind::Relative, RelocationEncoding::Generic, 32) => {
                                 elf::R_CKCORE_PCREL32
                             }
+                            (RelocationKind::Elf(x), _, _) => x,
+                            _ => {
+                                return Err(Error(format!("unimplemented relocation {:?}", reloc)));
+                            }
+                        },
+                        Architecture::E2k => match (reloc.kind, reloc.encoding, reloc.size) {
+                            (RelocationKind::Absolute, _, 64) => elf::R_E2K_64_ABS,
+                            (RelocationKind::Absolute, _, 32) => elf::R_E2K_32_ABS,
                             (RelocationKind::Elf(x), _, _) => x,
                             _ => {
                                 return Err(Error(format!("unimplemented relocation {:?}", reloc)));

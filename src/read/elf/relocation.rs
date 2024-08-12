@@ -411,6 +411,11 @@ fn parse_relocation<Elf: FileHeader>(
                 r_type => (RelocationKind::Elf(r_type), 0),
             }
         }
+        elf::EM_MCST_ELBRUS => match reloc.r_type(endian, false) {
+            elf::R_E2K_32_ABS => (RelocationKind::Absolute, 32),
+            elf::R_E2K_64_ABS => (RelocationKind::Absolute, 64),
+            r_type => (RelocationKind::Elf(r_type), 0),
+        },
         elf::EM_XTENSA => match reloc.r_type(endian, false) {
             elf::R_XTENSA_32 => (RelocationKind::Absolute, 32),
             elf::R_XTENSA_32_PCREL => (RelocationKind::Relative, 32),
