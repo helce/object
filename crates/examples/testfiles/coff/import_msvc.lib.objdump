@@ -52,6 +52,9 @@ Symbols
 
 Dynamic symbols
 
+Symbol map
+0x0 "test_x64_NULL_THUNK_DATA"
+
 test_x64.dll:
 Format: Coff Little-endian 32-bit
 Kind: Relocatable
@@ -69,6 +72,9 @@ Symbols
 1: Symbol { name: "__NULL_IMPORT_DESCRIPTOR", address: 0, size: 0, kind: Data, section: Section(SectionIndex(2)), scope: Linkage, weak: false, flags: None }
 
 Dynamic symbols
+
+Symbol map
+0x0 "__NULL_IMPORT_DESCRIPTOR"
 
 test_x64.dll:
 Format: Coff Little-endian 32-bit
@@ -89,8 +95,8 @@ Symbols
 1: Symbol { name: "__IMPORT_DESCRIPTOR_test_x64", address: 0, size: 0, kind: Data, section: Section(SectionIndex(2)), scope: Linkage, weak: false, flags: None }
 2: Symbol { name: ".idata$2", address: 0, size: 0, kind: Section, section: Section(SectionIndex(2)), scope: Compilation, weak: false, flags: None }
 3: Symbol { name: ".idata$6", address: 0, size: 0, kind: Data, section: Section(SectionIndex(3)), scope: Compilation, weak: false, flags: None }
-4: Symbol { name: ".idata$4", address: 0, size: 0, kind: Section, section: Common, scope: Compilation, weak: false, flags: None }
-5: Symbol { name: ".idata$5", address: 0, size: 0, kind: Section, section: Common, scope: Compilation, weak: false, flags: None }
+4: Symbol { name: ".idata$4", address: 0, size: 0, kind: Section, section: Undefined, scope: Compilation, weak: false, flags: None }
+5: Symbol { name: ".idata$5", address: 0, size: 0, kind: Section, section: Undefined, scope: Compilation, weak: false, flags: None }
 6: Symbol { name: "__NULL_IMPORT_DESCRIPTOR", address: 0, size: 0, kind: Data, section: Undefined, scope: Linkage, weak: false, flags: None }
 7: Symbol { name: "\u{7f}test_x64_NULL_THUNK_DATA", address: 0, size: 0, kind: Data, section: Undefined, scope: Linkage, weak: false, flags: None }
 
@@ -100,6 +106,9 @@ Symbols
 (10, Relocation { kind: ImageOffset, encoding: Generic, size: 20, target: Symbol(SymbolIndex(5)), addend: 0, implicit_addend: true })
 
 Dynamic symbols
+
+Symbol map
+0x0 "__IMPORT_DESCRIPTOR_test_x64"
 
 test_x86.dll:
 Format: Short Import File
@@ -129,6 +138,9 @@ Symbols
 
 Dynamic symbols
 
+Symbol map
+0x0 "test_x86_NULL_THUNK_DATA"
+
 test_x86.dll:
 Format: Coff Little-endian 32-bit
 Kind: Relocatable
@@ -146,6 +158,9 @@ Symbols
 1: Symbol { name: "__NULL_IMPORT_DESCRIPTOR", address: 0, size: 0, kind: Data, section: Section(SectionIndex(2)), scope: Linkage, weak: false, flags: None }
 
 Dynamic symbols
+
+Symbol map
+0x0 "__NULL_IMPORT_DESCRIPTOR"
 
 test_x86.dll:
 Format: Coff Little-endian 32-bit
@@ -166,8 +181,8 @@ Symbols
 1: Symbol { name: "__IMPORT_DESCRIPTOR_test_x86", address: 0, size: 0, kind: Data, section: Section(SectionIndex(2)), scope: Linkage, weak: false, flags: None }
 2: Symbol { name: ".idata$2", address: 0, size: 0, kind: Section, section: Section(SectionIndex(2)), scope: Compilation, weak: false, flags: None }
 3: Symbol { name: ".idata$6", address: 0, size: 0, kind: Data, section: Section(SectionIndex(3)), scope: Compilation, weak: false, flags: None }
-4: Symbol { name: ".idata$4", address: 0, size: 0, kind: Section, section: Common, scope: Compilation, weak: false, flags: None }
-5: Symbol { name: ".idata$5", address: 0, size: 0, kind: Section, section: Common, scope: Compilation, weak: false, flags: None }
+4: Symbol { name: ".idata$4", address: 0, size: 0, kind: Section, section: Undefined, scope: Compilation, weak: false, flags: None }
+5: Symbol { name: ".idata$5", address: 0, size: 0, kind: Section, section: Undefined, scope: Compilation, weak: false, flags: None }
 6: Symbol { name: "__NULL_IMPORT_DESCRIPTOR", address: 0, size: 0, kind: Data, section: Undefined, scope: Linkage, weak: false, flags: None }
 7: Symbol { name: "\u{7f}test_x86_NULL_THUNK_DATA", address: 0, size: 0, kind: Data, section: Undefined, scope: Linkage, weak: false, flags: None }
 
@@ -178,9 +193,13 @@ Symbols
 
 Dynamic symbols
 
+Symbol map
+0x0 "__IMPORT_DESCRIPTOR_test_x86"
+
 test_arm64ec.dll:
 Format: Short Import File
-Architecture: Unknown
+Architecture: Aarch64
+Sub-Architecture: Arm64EC
 DLL: "test_arm64ec.dll"
 Symbol: "#foo_arm64ec"
 Import: Name("foo_arm64ec")
@@ -206,6 +225,9 @@ Symbols
 
 Dynamic symbols
 
+Symbol map
+0x0 "test_arm64ec_NULL_THUNK_DATA"
+
 test_arm64ec.dll:
 Format: Coff Little-endian 32-bit
 Kind: Relocatable
@@ -223,6 +245,9 @@ Symbols
 1: Symbol { name: "__NULL_IMPORT_DESCRIPTOR", address: 0, size: 0, kind: Data, section: Section(SectionIndex(2)), scope: Linkage, weak: false, flags: None }
 
 Dynamic symbols
+
+Symbol map
+0x0 "__NULL_IMPORT_DESCRIPTOR"
 
 test_arm64ec.dll:
 Format: Coff Little-endian 32-bit
@@ -243,8 +268,8 @@ Symbols
 1: Symbol { name: "__IMPORT_DESCRIPTOR_test_arm64ec", address: 0, size: 0, kind: Data, section: Section(SectionIndex(2)), scope: Linkage, weak: false, flags: None }
 2: Symbol { name: ".idata$2", address: 0, size: 0, kind: Section, section: Section(SectionIndex(2)), scope: Compilation, weak: false, flags: None }
 3: Symbol { name: ".idata$6", address: 0, size: 0, kind: Data, section: Section(SectionIndex(3)), scope: Compilation, weak: false, flags: None }
-4: Symbol { name: ".idata$4", address: 0, size: 0, kind: Section, section: Common, scope: Compilation, weak: false, flags: None }
-5: Symbol { name: ".idata$5", address: 0, size: 0, kind: Section, section: Common, scope: Compilation, weak: false, flags: None }
+4: Symbol { name: ".idata$4", address: 0, size: 0, kind: Section, section: Undefined, scope: Compilation, weak: false, flags: None }
+5: Symbol { name: ".idata$5", address: 0, size: 0, kind: Section, section: Undefined, scope: Compilation, weak: false, flags: None }
 6: Symbol { name: "__NULL_IMPORT_DESCRIPTOR", address: 0, size: 0, kind: Data, section: Undefined, scope: Linkage, weak: false, flags: None }
 7: Symbol { name: "\u{7f}test_arm64ec_NULL_THUNK_DATA", address: 0, size: 0, kind: Data, section: Undefined, scope: Linkage, weak: false, flags: None }
 
@@ -254,3 +279,6 @@ Symbols
 (10, Relocation { kind: ImageOffset, encoding: Generic, size: 20, target: Symbol(SymbolIndex(5)), addend: 0, implicit_addend: true })
 
 Dynamic symbols
+
+Symbol map
+0x0 "__IMPORT_DESCRIPTOR_test_arm64ec"
