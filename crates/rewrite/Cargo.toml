@@ -3,7 +3,7 @@ name = "object-rewrite"
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/gimli-rs/object/rewrite"
+repository = "https://github.com/gimli-rs/object/tree/master/crates/rewrite"
 description = "Rewrite object files with modifications"
 include = [
   "/Cargo.lock",
@@ -15,7 +15,7 @@ include = [
 features = ['doc']
 
 [dependencies]
-object = { version = "0.33.0", default-features = false, features = ["build", "elf"], path = "../.." }
+object = { version = "0.34.0", default-features = false, features = ["build", "elf"], path = "../.." }
 
 # Dependencies for the cli
 anyhow = { version = "1.0.79", optional = true }
