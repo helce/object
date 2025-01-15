@@ -5966,6 +5966,8 @@ pub const EF_E2K_MACH_1CPLUS: u32 = 0x14000000;
 pub const EF_E2K_MACH_12C: u32 = 0x15000000;
 pub const EF_E2K_MACH_16C: u32 = 0x16000000;
 pub const EF_E2K_MACH_2C3: u32 = 0x17000000;
+pub const EF_E2K_MACH_48C: u32 = 0x18000000;
+pub const EF_E2K_MACH_8V7: u32 = 0x19000000;
 
 // E2K values `Rel*::r_type`.
 pub const R_E2K_32_ABS: u32 = 0;
