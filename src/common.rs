@@ -272,8 +272,6 @@ pub enum ComdatKind {
 pub enum SymbolKind {
     /// The symbol kind is unknown.
     Unknown,
-    /// The symbol is a null placeholder.
-    Null,
     /// The symbol is for executable code.
     Text,
     /// The symbol is for a data object.
