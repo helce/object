@@ -6,7 +6,7 @@ use crate::endian::{self, Endianness, U32Bytes};
 use crate::pod::Pod;
 use crate::read::{
     self, Bytes, CompressedData, CompressedFileRange, CompressionFormat, Error, ObjectSection,
-    ReadError, ReadRef, SectionFlags, SectionIndex, SectionKind, StringTable,
+    ReadError, ReadRef, RelocationMap, SectionFlags, SectionIndex, SectionKind, StringTable,
 };
 
 use super::{
@@ -86,6 +86,7 @@ impl<'data, Elf: FileHeader, R: ReadRef<'data>> SectionTable<'data, Elf, R> {
 
     /// Return the string table at the given section index.
     ///
+    /// Returns an empty string table if the index is 0.
     /// Returns an error if the section is not a string table.
     #[inline]
     pub fn strings(
@@ -94,6 +95,9 @@ impl<'data, Elf: FileHeader, R: ReadRef<'data>> SectionTable<'data, Elf, R> {
         data: R,
         index: SectionIndex,
     ) -> read::Result<StringTable<'data, R>> {
+        if index == SectionIndex(0) {
+            return Ok(StringTable::default());
+        }
         self.section(index)?
             .strings(endian, data)?
             .read_error("Invalid ELF string section type")
@@ -587,6 +591,10 @@ where
             file: self.file,
             relocations: None,
         }
+    }
+
+    fn relocation_map(&self) -> read::Result<RelocationMap> {
+        RelocationMap::new(self.file, self)
     }
 
     fn flags(&self) -> SectionFlags {

@@ -229,6 +229,8 @@ impl<'a> Writer<'a> {
     /// Reserve a file range with the given size and starting alignment.
     ///
     /// Returns the aligned offset of the start of the range.
+    ///
+    /// `align_start` must be a power of two.
     pub fn reserve(&mut self, len: usize, align_start: usize) -> usize {
         if align_start > 1 {
             self.len = util::align(self.len, align_start);
@@ -641,11 +643,16 @@ impl<'a> Writer<'a> {
         self.need_strtab
     }
 
+    /// Require the string table even if no strings were added.
+    pub fn require_strtab(&mut self) {
+        self.need_strtab = true;
+    }
+
     /// Reserve the range for the string table.
     ///
     /// This range is used for a section named `.strtab`.
     ///
-    /// This function does nothing if no strings or symbols were defined.
+    /// This function does nothing if no strings were defined.
     /// This must be called after [`Self::add_string`].
     pub fn reserve_strtab(&mut self) {
         debug_assert_eq!(self.strtab_offset, 0);
@@ -719,8 +726,6 @@ impl<'a> Writer<'a> {
         debug_assert_eq!(self.symtab_offset, 0);
         debug_assert_eq!(self.symtab_num, 0);
         self.symtab_num = 1;
-        // The symtab must link to a strtab.
-        self.need_strtab = true;
         SymbolIndex(0)
     }
 
@@ -741,8 +746,6 @@ impl<'a> Writer<'a> {
         debug_assert_eq!(self.symtab_shndx_offset, 0);
         if self.symtab_num == 0 {
             self.symtab_num = 1;
-            // The symtab must link to a strtab.
-            self.need_strtab = true;
         }
         let index = self.symtab_num;
         self.symtab_num += 1;
@@ -893,6 +896,12 @@ impl<'a> Writer<'a> {
         self.need_symtab_shndx
     }
 
+    /// Require the extended section indices for the symbol table even
+    /// if no section indices are too large.
+    pub fn require_symtab_shndx(&mut self) {
+        self.need_symtab_shndx = true;
+    }
+
     /// Reserve the range for the extended section indices for the symbol table.
     ///
     /// This range is used for a section named `.symtab_shndx`.
@@ -992,11 +1001,16 @@ impl<'a> Writer<'a> {
         self.need_dynstr
     }
 
+    /// Require the dynamic string table even if no strings were added.
+    pub fn require_dynstr(&mut self) {
+        self.need_dynstr = true;
+    }
+
     /// Reserve the range for the dynamic string table.
     ///
     /// This range is used for a section named `.dynstr`.
     ///
-    /// This function does nothing if no dynamic strings or symbols were defined.
+    /// This function does nothing if no dynamic strings were defined.
     /// This must be called after [`Self::add_dynamic_string`].
     pub fn reserve_dynstr(&mut self) -> usize {
         debug_assert_eq!(self.dynstr_offset, 0);
@@ -1014,9 +1028,6 @@ impl<'a> Writer<'a> {
     ///
     /// This must be called after [`Self::reserve_dynstr`].
     pub fn dynstr_len(&mut self) -> usize {
-        if !self.need_dynstr {
-            return 0;
-        }
         debug_assert_ne!(self.dynstr_offset, 0);
         self.dynstr_data.len()
     }
@@ -1087,8 +1098,6 @@ impl<'a> Writer<'a> {
         debug_assert_eq!(self.dynsym_offset, 0);
         debug_assert_eq!(self.dynsym_num, 0);
         self.dynsym_num = 1;
-        // The symtab must link to a strtab.
-        self.need_dynstr = true;
         SymbolIndex(0)
     }
 
@@ -1105,8 +1114,6 @@ impl<'a> Writer<'a> {
         debug_assert_eq!(self.dynsym_offset, 0);
         if self.dynsym_num == 0 {
             self.dynsym_num = 1;
-            // The symtab must link to a strtab.
-            self.need_dynstr = true;
         }
         let index = self.dynsym_num;
         self.dynsym_num += 1;
@@ -1522,7 +1529,7 @@ impl<'a> Writer<'a> {
             sh_link: self.dynsym_index.0,
             sh_info: 0,
             sh_addralign: self.elf_align as u64,
-            sh_entsize: 0,
+            sh_entsize: if self.is_64 { 0 } else { 4 },
         });
     }
 

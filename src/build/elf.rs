@@ -28,6 +28,13 @@ pub struct Builder<'data> {
     /// Use to set the file class when writing the ELF file.
     pub is_64: bool,
     /// The alignment of [`elf::PT_LOAD`] segments.
+    ///
+    /// This is an informational field and is not used when writing the ELF file.
+    /// It can optionally be used when calling [`Segments::add_load_segment`].
+    ///
+    /// It is determined heuristically when reading the ELF file. Currently,
+    /// if all load segments have the same alignment, that alignment is used,
+    /// otherwise it is set to 1.
     pub load_align: u64,
     /// The file header.
     pub header: Header,
@@ -64,7 +71,7 @@ impl<'data> Builder<'data> {
         Self {
             endian,
             is_64,
-            load_align: 0,
+            load_align: 1,
             header: Header::default(),
             segments: Segments::new(),
             sections: Sections::new(),
@@ -145,10 +152,11 @@ impl<'data> Builder<'data> {
         for segment in segments {
             if segment.p_type(endian) == elf::PT_LOAD {
                 let p_align = segment.p_align(endian).into();
-                if builder.load_align != 0 && builder.load_align != p_align {
-                    return Err(Error::new("Unsupported alignments for PT_LOAD segments"));
+                if builder.load_align == 0 {
+                    builder.load_align = p_align;
+                } else if builder.load_align != p_align {
+                    builder.load_align = 1;
                 }
-                builder.load_align = p_align;
             }
 
             let id = builder.segments.next_id();
@@ -167,9 +175,8 @@ impl<'data> Builder<'data> {
                 marker: PhantomData,
             });
         }
-        if !builder.segments.is_empty() && builder.load_align == 0 {
-            // There should be at least one PT_LOAD segment.
-            return Err(Error::new("Unsupported segments without a PT_LOAD segment"));
+        if builder.load_align == 0 {
+            builder.load_align = 1;
         }
 
         for (index, section) in sections.iter().enumerate().skip(1) {
@@ -179,6 +186,7 @@ impl<'data> Builder<'data> {
                     index,
                     endian,
                     is_mips64el,
+                    section,
                     rels,
                     link,
                     &symbols,
@@ -189,6 +197,7 @@ impl<'data> Builder<'data> {
                     index,
                     endian,
                     is_mips64el,
+                    section,
                     rels,
                     link,
                     &symbols,
@@ -207,9 +216,10 @@ impl<'data> Builder<'data> {
             }
             let data = match section.sh_type(endian) {
                 elf::SHT_NOBITS => SectionData::UninitializedData(section.sh_size(endian).into()),
-                elf::SHT_PROGBITS | elf::SHT_INIT_ARRAY | elf::SHT_FINI_ARRAY => {
-                    SectionData::Data(section.data(endian, data)?.into())
-                }
+                elf::SHT_PROGBITS
+                | elf::SHT_INIT_ARRAY
+                | elf::SHT_FINI_ARRAY
+                | elf::SHT_PREINIT_ARRAY => SectionData::Data(section.data(endian, data)?.into()),
                 elf::SHT_REL | elf::SHT_RELA => relocations,
                 elf::SHT_SYMTAB => {
                     if index == symbols.section().0 {
@@ -272,7 +282,9 @@ impl<'data> Builder<'data> {
                 elf::SHT_GNU_VERNEED => SectionData::GnuVerneed,
                 other => match (builder.header.e_machine, other) {
                     (elf::EM_ARM, elf::SHT_ARM_ATTRIBUTES)
-                    | (elf::EM_AARCH64, elf::SHT_AARCH64_ATTRIBUTES) => {
+                    | (elf::EM_AARCH64, elf::SHT_AARCH64_ATTRIBUTES)
+                    | (elf::EM_CSKY, elf::SHT_CSKY_ATTRIBUTES)
+                    | (elf::EM_RISCV, elf::SHT_RISCV_ATTRIBUTES) => {
                         let attributes = section.attributes(endian, data)?;
                         Self::read_attributes(index, attributes, sections.len(), symbols.len())?
                     }
@@ -282,7 +294,8 @@ impl<'data> Builder<'data> {
                     (elf::EM_ARM, elf::SHT_ARM_EXIDX)
                     | (elf::EM_IA_64, elf::SHT_IA_64_UNWIND)
                     | (elf::EM_MIPS, elf::SHT_MIPS_REGINFO)
-                    | (elf::EM_MIPS, elf::SHT_MIPS_DWARF) => {
+                    | (elf::EM_MIPS, elf::SHT_MIPS_DWARF)
+                    | (elf::EM_X86_64, elf::SHT_X86_64_UNWIND) => {
                         SectionData::Data(section.data(endian, data)?.into())
                     }
                     _ => return Err(Error(format!("Unsupported section type {:x}", other))),
@@ -362,6 +375,7 @@ impl<'data> Builder<'data> {
         index: usize,
         endian: Elf::Endian,
         is_mips64el: bool,
+        section: &'data Elf::SectionHeader,
         rels: &'data [Rel],
         link: read::SectionIndex,
         symbols: &read::elf::SymbolTable<'data, Elf, R>,
@@ -372,7 +386,27 @@ impl<'data> Builder<'data> {
         Rel: Copy + Into<Elf::Rela>,
         R: ReadRef<'data>,
     {
-        if link.0 == 0 {
+        if link == dynamic_symbols.section() {
+            Self::read_relocations_impl::<Elf, Rel, true>(
+                index,
+                endian,
+                is_mips64el,
+                rels,
+                dynamic_symbols.len(),
+            )
+            .map(SectionData::DynamicRelocation)
+        } else if link.0 == 0 || section.sh_flags(endian).into() & u64::from(elf::SHF_ALLOC) != 0 {
+            // If there's no link, then none of the relocations may reference symbols.
+            // Assume that these are dynamic relocations, but don't use the dynamic
+            // symbol table when parsing.
+            //
+            // Additionally, sometimes there is an allocated section that links to
+            // the static symbol table. We don't currently support this case in general,
+            // but if none of the relocation entries reference a symbol then it is
+            // safe to treat it as a dynamic relocation section.
+            //
+            // For both of these cases, if there is a reference to a symbol then
+            // an error will be returned when parsing the relocations.
             Self::read_relocations_impl::<Elf, Rel, true>(index, endian, is_mips64el, rels, 0)
                 .map(SectionData::DynamicRelocation)
         } else if link == symbols.section() {
@@ -384,15 +418,6 @@ impl<'data> Builder<'data> {
                 symbols.len(),
             )
             .map(SectionData::Relocation)
-        } else if link == dynamic_symbols.section() {
-            Self::read_relocations_impl::<Elf, Rel, true>(
-                index,
-                endian,
-                is_mips64el,
-                rels,
-                dynamic_symbols.len(),
-            )
-            .map(SectionData::DynamicRelocation)
         } else {
             return Err(Error(format!(
                 "Invalid sh_link {} in relocation section at index {}",
@@ -862,8 +887,16 @@ impl<'data> Builder<'data> {
 
         // Assign dynamic symbol indices.
         let mut out_dynsyms = Vec::with_capacity(self.dynamic_symbols.len());
-        let mut gnu_hash_symbol_count = 0;
-        for symbol in &self.dynamic_symbols {
+        // Local symbols must come before global.
+        let local_symbols = self
+            .dynamic_symbols
+            .into_iter()
+            .filter(|symbol| symbol.st_bind() == elf::STB_LOCAL);
+        let global_symbols = self
+            .dynamic_symbols
+            .into_iter()
+            .filter(|symbol| symbol.st_bind() != elf::STB_LOCAL);
+        for symbol in local_symbols.chain(global_symbols) {
             let mut name = None;
             let mut hash = None;
             let mut gnu_hash = None;
@@ -872,9 +905,8 @@ impl<'data> Builder<'data> {
                 if hash_id.is_some() {
                     hash = Some(elf::hash(&symbol.name));
                 }
-                if gnu_hash_id.is_some() && symbol.st_shndx != elf::SHN_UNDEF {
+                if gnu_hash_id.is_some() && symbol.section.is_some() {
                     gnu_hash = Some(elf::gnu_hash(&symbol.name));
-                    gnu_hash_symbol_count += 1;
                 }
             }
             out_dynsyms.push(DynamicSymbolOut {
@@ -884,16 +916,26 @@ impl<'data> Builder<'data> {
                 gnu_hash,
             });
         }
+        let num_local_dynamic = out_dynsyms
+            .iter()
+            .take_while(|sym| self.dynamic_symbols.get(sym.id).st_bind() == elf::STB_LOCAL)
+            .count();
         // We must sort for GNU hash before allocating symbol indices.
+        let mut gnu_hash_symbol_count = 0;
         if gnu_hash_id.is_some() {
             if self.gnu_hash_bucket_count == 0 {
                 return Err(Error::new(".gnu.hash bucket count is zero"));
             }
             // TODO: recalculate bucket_count?
-            out_dynsyms.sort_by_key(|sym| match sym.gnu_hash {
+            out_dynsyms[num_local_dynamic..].sort_by_key(|sym| match sym.gnu_hash {
                 None => (0, 0),
                 Some(hash) => (1, hash % self.gnu_hash_bucket_count),
             });
+            gnu_hash_symbol_count = out_dynsyms
+                .iter()
+                .skip(num_local_dynamic)
+                .skip_while(|sym| sym.gnu_hash.is_none())
+                .count() as u32;
         }
         let mut out_dynsyms_index = vec![None; self.dynamic_symbols.len()];
         if dynsym_id.is_some() {
@@ -938,10 +980,10 @@ impl<'data> Builder<'data> {
                 name,
             });
         }
-        let num_local = 1 + out_syms
+        let num_local = out_syms
             .iter()
             .take_while(|sym| self.symbols.get(sym.id).st_bind() == elf::STB_LOCAL)
-            .count() as u32;
+            .count();
         let mut out_syms_index = vec![None; self.symbols.len()];
         if symtab_id.is_some() {
             writer.reserve_null_symbol_index();
@@ -1034,15 +1076,21 @@ impl<'data> Builder<'data> {
             return Err(Error::new(
                 ".symtab.shndx section is needed but not present",
             ));
+        } else if symtab_shndx_id.is_some() {
+            writer.require_symtab_shndx();
         }
         if strtab_id.is_none() && writer.strtab_needed() {
             return Err(Error::new(".strtab section is needed but not present"));
+        } else if strtab_id.is_some() {
+            writer.require_strtab();
         }
         if dynsym_id.is_none() && !out_dynsyms.is_empty() {
             return Err(Error::new(".dynsym section is needed but not present"));
         }
         if dynstr_id.is_none() && writer.dynstr_needed() {
             return Err(Error::new(".dynstr section is needed but not present"));
+        } else if dynstr_id.is_some() {
+            writer.require_dynstr();
         }
         if gnu_verdef_id.is_none() && verdef_count > 0 {
             return Err(Error::new(
@@ -1096,17 +1144,19 @@ impl<'data> Builder<'data> {
             // from their section headers.
             alloc_sections.sort_by_key(|index| {
                 let section = &self.sections.get(out_sections[*index].id);
-                // SHT_NOBITS sections need to come before other sections at the same offset.
-                let file_size = if section.sh_type == elf::SHT_NOBITS {
-                    0
-                } else {
-                    section.sh_size
-                };
-                (section.sh_offset, file_size)
+                // Empty sections need to come before other sections at the same offset.
+                (section.sh_offset, section.sh_size)
             });
             for index in &alloc_sections {
                 let out_section = &mut out_sections[*index];
                 let section = &self.sections.get(out_section.id);
+
+                if section.sh_type == elf::SHT_NOBITS {
+                    // sh_offset is meaningless for SHT_NOBITS, so preserve the input
+                    // value without checking it.
+                    out_section.offset = section.sh_offset as usize;
+                    continue;
+                }
 
                 if section.sh_offset < writer.reserved_len() as u64 {
                     return Err(Error(format!(
@@ -1122,10 +1172,6 @@ impl<'data> Builder<'data> {
                 out_section.offset = match &section.data {
                     SectionData::Data(data) => {
                         writer.reserve(data.len(), section.sh_addralign as usize)
-                    }
-                    SectionData::UninitializedData(_) => {
-                        // Note: unaligned input sh_offset was observed in practice.
-                        writer.reserve(0, 1)
                     }
                     SectionData::DynamicRelocation(relocations) => writer
                         .reserve_relocations(relocations.len(), section.sh_type == elf::SHT_RELA),
@@ -1191,9 +1237,7 @@ impl<'data> Builder<'data> {
                 SectionData::Data(data) => {
                     writer.reserve(data.len(), section.sh_addralign as usize)
                 }
-                SectionData::UninitializedData(_) => {
-                    writer.reserve(0, section.sh_addralign as usize)
-                }
+                SectionData::UninitializedData(_) => writer.reserved_len(),
                 SectionData::Note(data) => {
                     writer.reserve(data.len(), section.sh_addralign as usize)
                 }
@@ -1268,12 +1312,16 @@ impl<'data> Builder<'data> {
             for index in &alloc_sections {
                 let out_section = &mut out_sections[*index];
                 let section = self.sections.get(out_section.id);
+
+                if section.sh_type == elf::SHT_NOBITS {
+                    continue;
+                }
+
                 writer.pad_until(out_section.offset);
                 match &section.data {
                     SectionData::Data(data) => {
                         writer.write(data);
                     }
-                    SectionData::UninitializedData(_) => {}
                     SectionData::DynamicRelocation(relocations) => {
                         for rel in relocations {
                             let r_sym = if let Some(symbol) = rel.symbol {
@@ -1583,7 +1631,13 @@ impl<'data> Builder<'data> {
                         SectionData::Dynamic(dynamics) => {
                             ((1 + dynamics.len()) * self.class().dyn_size()) as u64
                         }
-                        _ => 0,
+                        SectionData::Attributes(_) => out_section.attributes.len() as u64,
+                        _ => {
+                            return Err(Error(format!(
+                                "Unimplemented size for section type {:x}",
+                                section.sh_type
+                            )))
+                        }
                     };
                     let sh_link = if let Some(id) = section.sh_link_section {
                         if let Some(index) = out_sections_index[id.0] {
@@ -1628,7 +1682,7 @@ impl<'data> Builder<'data> {
                     writer.write_shstrtab_section_header();
                 }
                 SectionData::Symbol => {
-                    writer.write_symtab_section_header(num_local);
+                    writer.write_symtab_section_header(1 + num_local as u32);
                 }
                 SectionData::SymbolSectionIndex => {
                     writer.write_symtab_shndx_section_header();
@@ -1640,7 +1694,8 @@ impl<'data> Builder<'data> {
                     writer.write_dynstr_section_header(section.sh_addr);
                 }
                 SectionData::DynamicSymbol => {
-                    writer.write_dynsym_section_header(section.sh_addr, 1);
+                    writer
+                        .write_dynsym_section_header(section.sh_addr, 1 + num_local_dynamic as u32);
                 }
                 SectionData::Hash => {
                     writer.write_hash_section_header(section.sh_addr);
@@ -2317,6 +2372,8 @@ impl<'data> Segments<'data> {
     /// Add a new `PT_LOAD` segment to the table.
     ///
     /// The file offset and address will be derived from the current maximum for any segment.
+    /// The address will be chosen so that `p_paddr % align == p_offset % align`.
+    /// You may wish to use [`Builder::load_align`] for the alignment.
     pub fn add_load_segment(&mut self, flags: u32, align: u64) -> &mut Segment<'data> {
         let mut max_offset = 0;
         let mut max_addr = 0;
@@ -3005,7 +3062,7 @@ pub struct AttributesSubsubsection<'data> {
 }
 
 /// The tag for a sub-subsection in an attributes section.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AttributeTag {
     /// The attributes apply to the whole file.
     ///

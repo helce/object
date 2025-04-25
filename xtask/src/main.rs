@@ -34,8 +34,18 @@ type Task = (&'static str, fn() -> Result<(), DynError>, &'static str);
 const TASKS: &[Task] = &[
     ("ci", cmd_ci, "runs everything in CI"),
     ("check", cmd_check, "checks everything"),
-    ("build", cmd_build, "builds everything"),
-    ("test", cmd_test, "tests everything"),
+    ("build", cmd_build, "builds everything with dev profile"),
+    (
+        "build-release",
+        cmd_build_release,
+        "builds everything with release profile",
+    ),
+    ("test", cmd_test, "tests everything with dev profile"),
+    (
+        "test-release",
+        cmd_test_release,
+        "tests everything with release profile",
+    ),
     (
         "test-update",
         cmd_test_update,
@@ -83,8 +93,16 @@ fn cmd_build() -> Result<(), DynError> {
     cargo(&["build", "--workspace", "--features", "all"])
 }
 
+fn cmd_build_release() -> Result<(), DynError> {
+    cargo(&["build", "--workspace", "--features", "all", "--release"])
+}
+
 fn cmd_test() -> Result<(), DynError> {
     cargo(&["test", "--workspace", "--features", "all"])
+}
+
+fn cmd_test_release() -> Result<(), DynError> {
+    cargo(&["test", "--workspace", "--features", "all", "--release"])
 }
 
 fn cmd_test_update() -> Result<(), DynError> {
@@ -167,24 +185,6 @@ fn cmd_cross() -> Result<(), DynError> {
 }
 
 fn cmd_msrv() -> Result<(), DynError> {
-    // Test MSRV for object read feature.
-    cargo(&["update", "-p", "memchr", "--precise", "2.6.2"])?;
-    cmd_with(
-        "cargo",
-        &[
-            "+1.60.0",
-            "test",
-            "-p",
-            "object",
-            "--no-default-features",
-            "--features",
-            "read,std",
-        ],
-        |cmd| {
-            cmd.env("CARGO_NET_GIT_FETCH_WITH_CLI", "true");
-        },
-    )?;
-    cargo(&["update", "-p", "memchr"])?;
     // Test MSRV for object all features.
     cargo(&["update", "-p", "ahash", "--precise", "0.8.6"])?;
     cmd_with(
