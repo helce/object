@@ -776,6 +776,10 @@ pub const SHF_TLS: u32 = 1 << 10;
 pub const SHF_COMPRESSED: u32 = 1 << 11;
 /// OS-specific section flags.
 pub const SHF_MASKOS: u32 = 0x0ff0_0000;
+/// Section should not be garbage collected by the linker.
+pub const SHF_GNU_RETAIN: u32 = 1 << 21;
+/// Mbind section.
+pub const SHF_GNU_MBIND: u32 = 1 << 24;
 /// Processor-specific section flags.
 pub const SHF_MASKPROC: u32 = 0xf000_0000;
 /// This section is excluded from the final executable or shared library.
@@ -1864,6 +1868,7 @@ pub const ELF_NOTE_OS_FREEBSD: u32 = 3;
 /// The descriptor begins with two words:
 /// - word 0: number of entries
 /// - word 1: bitmask of enabled entries
+///
 /// Then follow variable-length entries, one byte followed by a
 /// '\0'-terminated hwcap name string.  The byte gives the bit
 /// number to test if enabled, (1U << bit) & bitmask.  */
