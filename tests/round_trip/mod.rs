@@ -280,6 +280,8 @@ fn elf_any() {
         (Architecture::Riscv64, Endianness::Little),
         (Architecture::S390x, Endianness::Big),
         (Architecture::Sbf, Endianness::Little),
+        (Architecture::Sparc, Endianness::Big),
+        (Architecture::Sparc32Plus, Endianness::Big),
         (Architecture::Sparc64, Endianness::Big),
         (Architecture::Xtensa, Endianness::Little),
     ]
@@ -453,18 +455,6 @@ fn macho_x86_64() {
 
     let (offset, relocation) = relocations.next().unwrap();
     println!("{:?}", relocation);
-    assert_eq!(offset, 8);
-    assert_eq!(relocation.kind(), RelocationKind::Absolute);
-    assert_eq!(relocation.encoding(), RelocationEncoding::Generic);
-    assert_eq!(relocation.size(), 64);
-    assert_eq!(
-        relocation.target(),
-        read::RelocationTarget::Symbol(func1_symbol)
-    );
-    assert_eq!(relocation.addend(), 0);
-
-    let (offset, relocation) = relocations.next().unwrap();
-    println!("{:?}", relocation);
     assert_eq!(offset, 16);
     assert_eq!(relocation.kind(), RelocationKind::Relative);
     assert_eq!(relocation.encoding(), RelocationEncoding::X86RipRelative);
@@ -474,6 +464,18 @@ fn macho_x86_64() {
         read::RelocationTarget::Symbol(func1_symbol)
     );
     assert_eq!(relocation.addend(), -4);
+
+    let (offset, relocation) = relocations.next().unwrap();
+    println!("{:?}", relocation);
+    assert_eq!(offset, 8);
+    assert_eq!(relocation.kind(), RelocationKind::Absolute);
+    assert_eq!(relocation.encoding(), RelocationEncoding::Generic);
+    assert_eq!(relocation.size(), 64);
+    assert_eq!(
+        relocation.target(),
+        read::RelocationTarget::Symbol(func1_symbol)
+    );
+    assert_eq!(relocation.addend(), 0);
 
     let map = object.symbol_map();
     let symbol = map.get(func1_offset + 1).unwrap();
@@ -563,14 +565,6 @@ fn macho_any() {
 
         let mut relocations = data.relocations();
 
-        let (offset, relocation) = relocations.next().unwrap();
-        println!("{:?}", relocation);
-        assert_eq!(offset, 8);
-        assert_eq!(relocation.kind(), RelocationKind::Absolute);
-        assert_eq!(relocation.encoding(), RelocationEncoding::Generic);
-        assert_eq!(relocation.size(), 32);
-        assert_eq!(relocation.addend(), 0);
-
         if arch.address_size().unwrap().bytes() >= 8 {
             let (offset, relocation) = relocations.next().unwrap();
             println!("{:?}", relocation);
@@ -580,6 +574,14 @@ fn macho_any() {
             assert_eq!(relocation.size(), 64);
             assert_eq!(relocation.addend(), 0);
         }
+
+        let (offset, relocation) = relocations.next().unwrap();
+        println!("{:?}", relocation);
+        assert_eq!(offset, 8);
+        assert_eq!(relocation.kind(), RelocationKind::Absolute);
+        assert_eq!(relocation.encoding(), RelocationEncoding::Generic);
+        assert_eq!(relocation.size(), 32);
+        assert_eq!(relocation.addend(), 0);
     }
 }
 

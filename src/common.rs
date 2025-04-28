@@ -28,6 +28,8 @@ pub enum Architecture {
     S390x,
     Sbf,
     Sharc,
+    Sparc,
+    Sparc32Plus,
     Sparc64,
     Wasm32,
     Wasm64,
@@ -72,6 +74,8 @@ impl Architecture {
             Architecture::S390x => Some(AddressSize::U64),
             Architecture::Sbf => Some(AddressSize::U64),
             Architecture::Sharc => Some(AddressSize::U32),
+            Architecture::Sparc => Some(AddressSize::U32),
+            Architecture::Sparc32Plus => Some(AddressSize::U32),
             Architecture::Sparc64 => Some(AddressSize::U64),
             Architecture::Wasm32 => Some(AddressSize::U32),
             Architecture::Wasm64 => Some(AddressSize::U64),
@@ -205,6 +209,11 @@ pub enum SectionKind {
     ///
     /// Example Mach-O sections: `__DWARF/__debug_info`
     Debug,
+    /// Debug strings.
+    ///
+    /// This is the same as either `Debug` or `OtherString`, depending on the file format.
+    /// This value is only used in the API for writing files. It is never returned when reading files.
+    DebugString,
     /// Information for the linker.
     ///
     /// Example COFF sections: `.drectve`
